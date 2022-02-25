@@ -1,0 +1,109 @@
+Option Explicit
+
+Dim oExcel, oWorkbook
+Dim sServer, sSender, sRecipient, sSubject, sMessage
+Dim oShell, oNetwork
+
+Dim objFSO,objFile
+
+Set oShell = CreateObject("WScript.Shell")
+Set oNetwork = CreateObject("WScript.Network")
+Set oExcel = CreateObject("Excel.Application")
+oExcel.Visible = True
+
+Const ReadOnly = 1
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objFile = objFSO.GetFile("filepath")
+If objFile.Attributes AND ReadOnly Then
+    objFile.Attributes = objFile.Attributes XOR ReadOnly
+End If
+
+
+set oWorkbook = oExcel.Workbooks.Open("FILEpath")
+
+oWorkbook.RefreshAll
+
+oWorkbook.Sheets(Array("Sheet names")).Select
+
+oWorkbook.ActiveSheet.ExportAsFixedFormat 0, "filepath", 0, 1, 0,,,0
+
+
+oWorkbook.Close True
+oExcel.Quit
+Set oWorkbook = Nothing
+Set oExcel = Nothing
+
+
+objFile.Attributes = objFile.Attributes XOR ReadOnly
+
+sServer = "NAME"
+
+sSender = "SENDER NAME"
+
+
+sRecipient = 
+
+sSubject = "Collections Goal Report"
+
+sMessage = "The following reports are available for download:" & VbCrLf & sMessage
+
+sMessage = sMessage & VbCrLf & "NAME"
+
+SendEmail sServer, sSender, sRecipient, sSubject, sMessage
+
+Sub SendEmail(server, sndr, rcpt, subj, msg)
+
+	Dim iMsg, iConf, Flds
+
+	Const cdoSendUsingMethod = "http://schemas.microsoft.com/cdo/configuration/sendusing"
+
+	Const cdoSendUsingPort = 2
+
+	Const cdoSMTPServer = "http://schemas.microsoft.com/cdo/configuration/smtpserver"
+
+
+	'Create the CDO connections.
+
+	Set iMsg = CreateObject("CDO.Message")
+
+	Set iConf = CreateObject("CDO.Configuration")
+
+	Set Flds = iConf.Fields
+
+	With Flds
+
+		.Item(cdoSendUsingMethod) = cdoSendUsingPort
+
+		.Item(cdoSMTPServer) = server
+
+		.Update
+
+	End With
+
+	With iMsg
+
+		Set .Configuration = iConf
+
+		.Bcc = rcpt
+
+		.From = sndr
+
+		.Subject = subj
+		
+		.AddAttachment "filepath"
+
+	End With
+
+	If InStr(UCase(msg), "<HTML>") Then
+
+		iMsg.HTMLBody = msg
+
+	Else
+
+		iMsg.TextBody = msg
+
+	End If
+
+	iMsg.Send
+
+End Sub
